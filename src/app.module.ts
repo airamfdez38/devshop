@@ -7,6 +7,7 @@ import { OrdersModule } from './orders/orders.module';
 import { ProductsModule } from './products/products.module';
 import { SuppliersModule } from './suppliers/suppliers.module';
 import { InvoicesModule } from './invoices/invoices.module';
+import { AddressesModule } from './addresses/addresses.module';
 
 @Module({
   imports: [UsersModule, TypeOrmModule.forRoot({
@@ -18,7 +19,7 @@ import { InvoicesModule } from './invoices/invoices.module';
     database: 'postgres', 
     autoLoadEntities: true, 
     synchronize: true, 
-  }), OrdersModule, ProductsModule, SuppliersModule, InvoicesModule],
+  }), OrdersModule, ProductsModule, SuppliersModule, InvoicesModule, AddressesModule],
   controllers: [AppController],
   providers: [AppService],
 })
