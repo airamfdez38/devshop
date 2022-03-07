@@ -5,6 +5,7 @@ import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { OrdersModule } from './orders/orders.module';
 import { ProductsModule } from './products/products.module';
+import { SuppliersModule } from './suppliers/suppliers.module';
 
 @Module({
   imports: [UsersModule, TypeOrmModule.forRoot({
@@ -16,8 +17,8 @@ import { ProductsModule } from './products/products.module';
     database: 'postgres', 
     autoLoadEntities: true, 
     synchronize: true, 
-  }), OrdersModule, ProductsModule],
-  controllers: [AppController,],
+  }), OrdersModule, ProductsModule, SuppliersModule],
+  controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {}
