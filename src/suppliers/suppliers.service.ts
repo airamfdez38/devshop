@@ -1,43 +1,47 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateSupplierDto } from './dto/create-supplier.dto';
+import { UpdateSupplierDto } from './dto/update-supplier.dto';
 import { Supplier } from './entities/supplier.entity';
 
 @Injectable()
 export class SuppliersService {
-    private suppliers : Supplier[] =[
-        {
-            id: 1,
-            name: "Empresa 1",
-            cif: "111111-A",
-            address: "Pol.Ind. Salinas",
-            email: "empresa_1@correo.es",
-            phone: "666777888"
-        },
-    ];
-    findAll(){
-        return this.suppliers;
-    }
-    findOne(id: string){
-        const supplier = this.suppliers.find(item => item.id === +id);
-        if(!supplier){
-            throw new NotFoundException(`Proveedor #${id} no encontrado`);
+    constructor(
+        @InjectRepository(Supplier)
+        private readonly supplierRepository: Repository<Supplier>,
+      ) {}
+    
+      findAll() {
+        return this.supplierRepository.find();
+      }
+    
+      async findOne(id: string) {
+        const supplier = await this.supplierRepository.findOne(id);
+        if (!supplier) {
+          throw new NotFoundException(`Proveedor #${id} no encontrado`);
         }
         return supplier;
-    }
-    create(createSupplierDto:any){
-        this.suppliers.push(createSupplierDto);
-        return CreateSupplierDto;
-    }
-    update(id: string, updateSupplierDto: any){
-        const existingSupplier = this.findOne(id);
-        if(existingSupplier){
-
+      }
+    
+      create(createSupplierDto: CreateSupplierDto) {
+        const supplier = this.supplierRepository.create(createSupplierDto);
+        return this.supplierRepository.save(supplier);
+      }
+    
+      async update(id: string, updateSupplierDto: UpdateSupplierDto) {
+        const supplier = await this.supplierRepository.preload({
+          id: +id,
+          ...updateSupplierDto,
+        });
+        if (!supplier) {
+          throw new NotFoundException(`Proveedor #${id} no encontrado`);
         }
-    }
-    remove(id: string){
-        const supplierIndex = this.suppliers.findIndex(item => item.id === +id);
-        if( supplierIndex >= 0){
-            this.suppliers.splice(supplierIndex, 1);
-        }
-    }
+        return this.supplierRepository.save(supplier);
+      }
+    
+      async remove(id: string) {
+        const supplier = await this.findOne(id);
+        return this.supplierRepository.remove(supplier);
+      }
 }

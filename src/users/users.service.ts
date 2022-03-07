@@ -1,45 +1,48 @@
+
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { User } from './entities/user.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { User } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
-    private users : User[] =[
-        {
-            id: 1,
-            name: "Maria",
-            surname: "Fernandez",
-            dni: "11111111-A",
-            email: "maria@correo.es",
-            password: "12345678",
-            phone: "666222444"
-        },
-    ];
-    findAll(){
-        return this.users;
-    }
-    findOne(id: string){
-        const user = this.users.find(item => item.id === +id);
-        if(!user){
-            throw new NotFoundException(`Usuario #${id} no encontrado`);
-        }
-        return user;
-    }
-    create(createUserDto:any){
-        this.users.push(createUserDto);
-        return CreateUserDto;
-    }
-    update(id: string, updateUserDto: any){
-        const existingUser = this.findOne(id);
-        if(existingUser){
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+  ) {}
 
-        }
+  findAll() {
+    return this.userRepository.find();
+  }
+
+  async findOne(id: string) {
+    const user = await this.userRepository.findOne(id);
+    if (!user) {
+      throw new NotFoundException(`Usuario #${id} no encontrado`);
     }
-    remove(id: string){
-        const userIndex = this.users.findIndex(item => item.id === +id);
-        if( userIndex >= 0){
-            this.users.splice(userIndex, 1);
-        }
+    return user;
+  }
+
+  create(createUserDto: CreateUserDto) {
+    const user = this.userRepository.create(createUserDto);
+    return this.userRepository.save(user);
+  }
+
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    const user = await this.userRepository.preload({
+      id: +id,
+      ...updateUserDto,
+    });
+    if (!user) {
+      throw new NotFoundException(`Usuario #${id} no encontrado`);
     }
+    return this.userRepository.save(user);
+  }
+
+  async remove(id: string) {
+    const user = await this.findOne(id);
+    return this.userRepository.remove(user);
+  }
 }
-

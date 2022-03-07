@@ -1,43 +1,47 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from './entities/product.entity';
 
 @Injectable()
 export class ProductsService {
-    private products : Product[] =[
-        {
-            id: 1,
-            name: "Camiseta JS",
-            brand: "JS",
-            stock: 20,
-            price: 19,
-            category: "Camiseta",
-        },
-    ];
-    findAll(){
-        return this.products;
-    }
-    findOne(id: string){
-        const product = this.products.find(item => item.id === +id);
-        if(!product){
-            throw new NotFoundException(`Producto #${id} no encontrado`);
+    constructor(
+        @InjectRepository(Product)
+        private readonly productRepository: Repository<Product>,
+      ) {}
+    
+      findAll() {
+        return this.productRepository.find();
+      }
+    
+      async findOne(id: string) {
+        const product = await this.productRepository.findOne(id);
+        if (!product) {
+          throw new NotFoundException(`Producto #${id} no encontrado`);
         }
         return product;
-    }
-    create(createProductDto:any){
-        this.products.push(createProductDto);
-        return CreateProductDto;
-    }
-    update(id: string, updateProductDto: any){
-        const existingProduct = this.findOne(id);
-        if(existingProduct){
-
+      }
+    
+      create(createProductDto: CreateProductDto) {
+        const product = this.productRepository.create(createProductDto);
+        return this.productRepository.save(product);
+      }
+    
+      async update(id: string, updateProductDto: UpdateProductDto) {
+        const product = await this.productRepository.preload({
+          id: +id,
+          ...updateProductDto,
+        });
+        if (!product) {
+          throw new NotFoundException(`Producto #${id} no encontrado`);
         }
-    }
-    remove(id: string){
-        const productIndex = this.products.findIndex(item => item.id === +id);
-        if( productIndex >= 0){
-            this.products.splice(productIndex, 1);
-        }
-    }
+        return this.productRepository.save(product);
+      }
+    
+      async remove(id: string) {
+        const product = await this.findOne(id);
+        return this.productRepository.remove(product);
+      }
 }
